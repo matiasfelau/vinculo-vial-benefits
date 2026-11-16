@@ -1,0 +1,95 @@
+services:
+  vinculo-vial-benefits:
+    container_name: vinculo-vial-benefits
+    # Mayor que el drenado HTTP (10 s) más el tiempo que se espera al mensaje en curso del
+    # consumidor de user.deleted (5 s): si no, SIGKILL llega antes.
+    stop_grace_period: 20s
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      # Router público: Kong lo alcanza por la red `vinculo-vial`.
+      - "${PORT:-8080}:${PORT:-8080}"
+      # Router de administración (carga de campañas, códigos y reportes de canje): solo en
+      # el loopback del host, para usar curl en desarrollo. Nunca en 0.0.0.0, y Kong no
+      # tiene ruta hacia él. En AWS solo se alcanza desde la VPC.
+      - "127.0.0.1:8084:${HTTP_ADMIN_PORT:-8082}"
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      PORT: ${PORT:-8080}
+      HTTP_ADMIN_PORT: ${HTTP_ADMIN_PORT:-8082}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      DATABASE_URL: postgres://benefits:benefits@vinculo-vial-benefits-db:5432/benefits?sslmode=disable
+      DB_QUERY_TIMEOUT_MS: ${DB_QUERY_TIMEOUT_MS:-1500}
+      ADMIN_DB_TIMEOUT_MS: ${ADMIN_DB_TIMEOUT_MS:-30000}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@vinculo-vial-rabbitmq:5672/}
+      RABBITMQ_PUBLISH_TIMEOUT_MS: ${RABBITMQ_PUBLISH_TIMEOUT_MS:-2000}
+      USER_DELETED_QUEUE: ${USER_DELETED_QUEUE:-benefits.user-deleted.q}
+      RABBITMQ_PREFETCH: ${RABBITMQ_PREFETCH:-10}
+      MAX_RETRIES: ${MAX_RETRIES:-5}
+      BENEFITS_CODE_AES_KEY: ${BENEFITS_CODE_AES_KEY:?definí BENEFITS_CODE_AES_KEY en el .env (openssl rand -base64 32)}
+      BENEFITS_CODE_HMAC_KEY: ${BENEFITS_CODE_HMAC_KEY:?definí BENEFITS_CODE_HMAC_KEY en el .env (openssl rand -base64 32)}
+      BANNER_MAX_BYTES: ${BANNER_MAX_BYTES:-307200}
+    networks:
+      - vinculo-vial
+      - benefits-internal
+    depends_on:
+      vinculo-vial-benefits-db:
+        condition: service_healthy
+
+  # Carga los datos de prueba (solo con APP_ENV=development). Se corre a mano:
+  #   docker compose --profile seed run --rm vinculo-vial-benefits-seed
+  vinculo-vial-benefits-seed:
+    container_name: vinculo-vial-benefits-seed
+    profiles: ["seed"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: seed
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgres://benefits:benefits@vinculo-vial-benefits-db:5432/benefits?sslmode=disable
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@vinculo-vial-rabbitmq:5672/}
+      BENEFITS_CODE_AES_KEY: ${BENEFITS_CODE_AES_KEY:?definí BENEFITS_CODE_AES_KEY en el .env (openssl rand -base64 32)}
+      BENEFITS_CODE_HMAC_KEY: ${BENEFITS_CODE_HMAC_KEY:?definí BENEFITS_CODE_HMAC_KEY en el .env (openssl rand -base64 32)}
+      BANNER_MAX_BYTES: ${BANNER_MAX_BYTES:-307200}
+    networks:
+      - benefits-internal
+    depends_on:
+      vinculo-vial-benefits-db:
+        condition: service_healthy
+
+  vinculo-vial-benefits-db:
+    container_name: vinculo-vial-benefits-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: benefits
+      POSTGRES_PASSWORD: benefits
+      POSTGRES_DB: benefits
+    volumes:
+      - vinculo-vial-benefits-data:/var/lib/postgresql/data
+    networks:
+      - benefits-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U benefits -d benefits"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  # Nombre fijado explícitamente: sin `name`, Compose antepone el nombre del proyecto (el
+  # propio directorio) y duplicaría el prefijo vinculo-vial-benefits.
+  vinculo-vial-benefits-data:
+    name: vinculo-vial-benefits-data
+
+networks:
+  # Red puente compartida por toda la plataforma. Es externa: la crea el ecosistema (o el
+  # propio operador con `docker network create vinculo-vial`), no este compose. Solo el
+  # servicio principal se conecta acá: es la única superficie que otros microservicios
+  # deben poder resolver por DNS.
+  vinculo-vial:
+    external: true
+  # Red local exclusiva de este servicio: aísla el tráfico hacia su base de datos, que no
+  # debe ser alcanzable desde otros microservicios ni desde la red compartida.
+  benefits-internal:
+    name: benefits-internal

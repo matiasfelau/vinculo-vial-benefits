@@ -1,0 +1,28 @@
+# Binarios y artefactos de build
+/benefits
+/seed
+/bin/
+*.exe
+*.test
+*.out
+coverage.xml
+coverage-func.txt
+diff-cover.md
+semgrep.json
+
+# Variables de entorno con valores reales
+.env
+
+# Instrucciones locales del agente y contratos de las tareas (no versionados)
+CLAUDE.md
+.clauderules
+clauderules
+CONTRATO-*.md
+
+# IDE
+.vscode/
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

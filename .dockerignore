@@ -1,0 +1,9 @@
+.git
+.github
+.env
+CLAUDE.md
+clauderules
+CONTRATO-*.md
+coverage*.out
+coverage.xml
+*.test

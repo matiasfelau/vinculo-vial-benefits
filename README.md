@@ -157,7 +157,7 @@ El compose levanta el servicio y su PostgreSQL (en una red interna propia, sin p
 
 `cmd/seed` solo corre con `APP_ENV=development` explícito y carga, de forma idempotente:
 
-- la campaña **"Estación de prueba"**, vigente, con un banner PNG generado y 100 códigos falsos (`PRUEBA-0001` a `PRUEBA-0100`);
+- la campaña **"Aplicación de prueba"**, vigente, con un banner PNG generado y 100 códigos falsos (`PRUEBA-0001` a `PRUEBA-0100`);
 - una campaña **vencida**, para comprobar que no se muestra.
 
 El seed va en una etapa propia del `Dockerfile` (`target: seed`): la imagen que se publica no lo incluye.

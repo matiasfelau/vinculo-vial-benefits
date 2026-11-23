@@ -34,7 +34,7 @@ const (
 
 // Los ids son fijos para que el seed sea idempotente.
 var (
-	// ActiveCampaignID es la campaña vigente "Estación de prueba".
+	// ActiveCampaignID es la campaña vigente "Aplicación de prueba".
 	ActiveCampaignID = uuid.MustParse("00000000-0000-4000-8000-0000000000a1")
 	// ExpiredCampaignID es la campaña vencida.
 	ExpiredCampaignID = uuid.MustParse("00000000-0000-4000-8000-0000000000e1")
@@ -67,11 +67,11 @@ func Run(ctx context.Context, repo domain.CampaignRepository, codes codeProtecto
 		{
 			campaign: domain.Campaign{
 				ID:          ActiveCampaignID,
-				PartnerName: "Estación de prueba",
-				Title:       "Estación de prueba",
-				Description: "Descuento en combustible para usuarios de Vinculo Vial. Campaña de prueba con códigos falsos.",
-				Terms:       "Campaña de prueba: los códigos no son válidos en ninguna estación real. Un código por persona.",
-				OpenURL:     "https://example.com/estacion-de-prueba",
+				PartnerName: "Aplicación de prueba",
+				Title:       "Aplicación de prueba",
+				Description: "Descuento para usuarios de Vinculo Vial. Campaña de prueba con códigos falsos.",
+				Terms:       "Campaña de prueba: los códigos no son válidos en ninguna aplicación real. Un código por persona.",
+				OpenURL:     "https://example.com/aplicacion-de-prueba",
 				StartsAt:    now.Add(-24 * time.Hour),
 				EndsAt:      now.Add(30 * 24 * time.Hour),
 				Active:      true,

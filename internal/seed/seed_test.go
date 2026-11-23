@@ -103,8 +103,8 @@ func TestRunCargaLaCampañaVigenteConSuBannerYSusCienCodigos(t *testing.T) {
 	if !ok {
 		t.Fatal("falta la campaña vigente")
 	}
-	if active.PartnerName != "Estación de prueba" || active.Title != "Estación de prueba" {
-		t.Errorf("nombre = %q / %q, esperaba %q", active.PartnerName, active.Title, "Estación de prueba")
+	if active.PartnerName != "Aplicación de prueba" || active.Title != "Aplicación de prueba" {
+		t.Errorf("nombre = %q / %q, esperaba %q", active.PartnerName, active.Title, "Aplicación de prueba")
 	}
 	if !active.IsLive(testNow) || !strings.HasPrefix(active.OpenURL, "https://") {
 		t.Errorf("la campaña de prueba debe estar vigente y con URL https: %+v", active)

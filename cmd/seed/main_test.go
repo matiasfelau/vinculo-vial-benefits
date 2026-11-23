@@ -93,7 +93,7 @@ func TestElSeedCargaLosDatosDePruebaYEsIdempotente(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(visibles) != 1 || visibles[0].ID != seed.ActiveCampaignID || visibles[0].Title != "Estación de prueba" {
+	if len(visibles) != 1 || visibles[0].ID != seed.ActiveCampaignID || visibles[0].Title != "Aplicación de prueba" {
 		t.Errorf("visibles = %+v; con el seed cargado solo se muestra la campaña vigente, no la vencida", visibles)
 	}
 }
